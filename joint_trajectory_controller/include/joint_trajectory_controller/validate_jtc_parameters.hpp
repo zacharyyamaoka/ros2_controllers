@@ -29,6 +29,7 @@ tl::expected<void, std::string> command_interface_type_combinations(
 {
   auto const & interface_types = parameter.as_string_array();
 
+  // TODO UPDATE THIS DOCUMENTATION
   // Check if command interfaces combination is valid. Valid combinations are:
   // 1. effort
   // 2. velocity
@@ -55,15 +56,16 @@ tl::expected<void, std::string> command_interface_type_combinations(
       "'position' command interfaces are present");
   }
 
-  if (
-    rsl::contains<std::vector<std::string>>(interface_types, "effort") &&
-    !(interface_types.size() == 1 ||
-      (interface_types.size() == 2 &&
-       rsl::contains<std::vector<std::string>>(interface_types, "position"))))
-  {
-    return tl::make_unexpected(
-      "'effort' command interface has to be used alone or with a 'position' interface");
-  }
+  // if (
+  //   rsl::contains<std::vector<std::string>>(interface_types, "effort") &&
+  //   !(interface_types.size() == 1 ||
+  //     (interface_types.size() == 2 &&
+  //      rsl::contains<std::vector<std::string>>(interface_types, "position"))))
+  // {
+  //   return tl::make_unexpected(
+  //     "'effort' command interface has to be used alone or with a 'position' interface");
+  // }
+  
 
   return {};
 }
