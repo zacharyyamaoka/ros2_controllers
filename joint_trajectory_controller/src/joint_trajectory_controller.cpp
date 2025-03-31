@@ -814,6 +814,8 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
     contains_interface_type(params_.state_interfaces, hardware_interface::HW_IF_VELOCITY);
   has_acceleration_state_interface_ =
     contains_interface_type(params_.state_interfaces, hardware_interface::HW_IF_ACCELERATION);
+  has_effort_state_interface_ =
+    contains_interface_type(params_.state_interfaces, hardware_interface::HW_IF_EFFORT);
 
   // Validation of combinations of state and velocity together have to be done
   // here because the parameter validators only deal with each parameter
@@ -830,18 +832,18 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
   }
 
   // effort only or effort and position command interfaces require position and velocity state
-  if (
-    has_effort_command_interface_ &&
-    (params_.command_interfaces.size() == 1 ||
-     (params_.command_interfaces.size() == 2 && has_position_command_interface_)) &&
-    (!has_velocity_state_interface_ || !has_position_state_interface_))
-  {
-    RCLCPP_ERROR(
-      logger,
-      "'effort' command interface can only be used alone or with 'position' command interface "
-      "if 'velocity' and 'position' state interfaces are present");
-    return CallbackReturn::FAILURE;
-  }
+  // if (
+  //   has_effort_command_interface_ &&
+  //   (params_.command_interfaces.size() == 1 ||
+  //    (params_.command_interfaces.size() == 2 && has_position_command_interface_)) &&
+  //   (!has_velocity_state_interface_ || !has_position_state_interface_))
+  // {
+  //   RCLCPP_ERROR(
+  //     logger,
+  //     "'effort' command interface can only be used alone or with 'position' command interface "
+  //     "if 'velocity' and 'position' state interfaces are present");
+  //   return CallbackReturn::FAILURE;
+  // }
 
   auto get_interface_list = [](const std::vector<std::string> & interface_types)
   {
