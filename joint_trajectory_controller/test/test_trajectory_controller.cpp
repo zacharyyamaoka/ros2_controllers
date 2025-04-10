@@ -845,15 +845,8 @@ TEST_P(TrajectoryControllerTestParameterized, position_error_not_angle_wraparoun
 
   if (traj_controller_->has_effort_command_interface())
   {
-    if (traj_controller_->has_position_command_interface())
-    {
-      // with position and effort command interface, we expect u = ff for feed forward effort,
-      // positions are passed directly to the position command interface (no PID is done)
-      EXPECT_NEAR(state_reference.effort[0], joint_eff_[0], COMMON_THRESHOLD);
-      EXPECT_NEAR(state_reference.effort[1], joint_eff_[1], COMMON_THRESHOLD);
-      EXPECT_NEAR(state_reference.effort[2], joint_eff_[2], COMMON_THRESHOLD);
-    }
-    else
+
+    if (traj_controller_->use_closed_loop_pid_adapter()) 
     {
       // with effort command interface, use_closed_loop_pid_adapter is always true
       // we expect u = k_p * (s_d-s) + ff for positions and feed forward effort
@@ -866,6 +859,14 @@ TEST_P(TrajectoryControllerTestParameterized, position_error_not_angle_wraparoun
       EXPECT_NEAR(
         k_p * (state_reference.positions[2] - INITIAL_POS_JOINTS[2]) + command_next.effort[2],
         joint_eff_[2], k_p * COMMON_THRESHOLD);
+    }
+    else
+    {   
+      
+      // Check equal to setpoint
+      EXPECT_NEAR(effort[0].at(0), state_reference.effort.at(0), COMMON_THRESHOLD);
+      EXPECT_NEAR(effort[0].at(1), state_reference.effort.at(1), COMMON_THRESHOLD);
+      EXPECT_NEAR(effort[0].at(2), state_reference.effort.at(2), COMMON_THRESHOLD);
     }
   }
 
@@ -972,17 +973,11 @@ TEST_P(TrajectoryControllerTestParameterized, position_error_angle_wraparound)
     }
   }
 
+
   if (traj_controller_->has_effort_command_interface())
   {
-    if (traj_controller_->has_position_command_interface())
-    {
-      // with position and effort command interface, we expect u = ff for feed forward effort,
-      // positions are passed directly to the position command interface (no PID is done)
-      EXPECT_NEAR(state_reference.effort[0], joint_eff_[0], COMMON_THRESHOLD);
-      EXPECT_NEAR(state_reference.effort[1], joint_eff_[1], COMMON_THRESHOLD);
-      EXPECT_NEAR(state_reference.effort[2], joint_eff_[2], COMMON_THRESHOLD);
-    }
-    else
+
+    if (traj_controller_->use_closed_loop_pid_adapter()) 
     {
       // with effort command interface, use_closed_loop_pid_adapter is always true
       // we expect u = k_p * (s_d-s) + ff for positions and feed forward effort
@@ -998,6 +993,14 @@ TEST_P(TrajectoryControllerTestParameterized, position_error_angle_wraparound)
         k_p * (state_reference.positions[2] - INITIAL_POS_JOINTS[2] - 2 * M_PI) +
           command_next.effort[2],
         joint_eff_[2], k_p * COMMON_THRESHOLD);
+
+    }
+    else
+    {     
+      // Check equal to setpoint
+      EXPECT_NEAR(effort[0].at(0), state_reference.effort.at(0), COMMON_THRESHOLD);
+      EXPECT_NEAR(effort[0].at(1), state_reference.effort.at(1), COMMON_THRESHOLD);
+      EXPECT_NEAR(effort[0].at(2), state_reference.effort.at(2), COMMON_THRESHOLD); 
     }
   }
 
@@ -1099,18 +1102,17 @@ TEST_P(TrajectoryControllerTestParameterized, trajectory_error_command_joints_le
 
   if (traj_controller_->has_effort_command_interface())
   {
-    if (traj_controller_->has_position_command_interface())
+    // Current effort command should be greater than the first command
+    EXPECT_LT(points_effort[0].at(0), joint_eff_[0]);
+    EXPECT_LT(points_effort[0].at(1), joint_eff_[1]);
+    EXPECT_TRUE(std::isnan(current_command.effort[2]));
+
+    if (!traj_controller_->use_closed_loop_pid_adapter()) 
     {
-      EXPECT_NEAR(state_reference.effort.at(0), joint_eff_[0], COMMON_THRESHOLD);
-      EXPECT_NEAR(state_reference.effort.at(1), joint_eff_[1], COMMON_THRESHOLD);
-      EXPECT_TRUE(std::isnan(current_command.effort[2]));
-    }
-    else
-    {
-      // effort should be nonzero, because we use PID with feedforward term
-      EXPECT_LT(points_effort[0].at(0), joint_eff_[0]);
-      EXPECT_LT(points_effort[0].at(1), joint_eff_[1]);
-      EXPECT_TRUE(std::isnan(current_command.effort[2]));
+      // Check equal to setpoint
+      EXPECT_NEAR(points_effort[0].at(0), state_reference.effort.at(0), COMMON_THRESHOLD);
+      EXPECT_NEAR(points_effort[0].at(1), state_reference.effort.at(1), COMMON_THRESHOLD);
+      EXPECT_NEAR(points_effort[0].at(2), state_reference.effort.at(2), COMMON_THRESHOLD);
     }
   }
 
@@ -1213,18 +1215,17 @@ TEST_P(TrajectoryControllerTestParameterized, trajectory_error_command_joints_le
 
   if (traj_controller_->has_effort_command_interface())
   {
-    if (traj_controller_->has_position_command_interface())
+    // Current effort command should be greater than the first command
+    EXPECT_LT(points_effort[0].at(0), joint_eff_[0]);
+    EXPECT_LT(points_effort[0].at(1), joint_eff_[1]);
+    EXPECT_TRUE(std::isnan(current_command.effort[2]));
+
+    if (!traj_controller_->use_closed_loop_pid_adapter()) 
     {
-      EXPECT_NEAR(state_reference.effort.at(0), joint_eff_[0], COMMON_THRESHOLD);
-      EXPECT_NEAR(state_reference.effort.at(1), joint_eff_[1], COMMON_THRESHOLD);
-      EXPECT_TRUE(std::isnan(current_command.effort[2]));
-    }
-    else
-    {
-      // effort should be nonzero, because we use PID with feedforward term
-      EXPECT_LT(points_effort[0].at(0), joint_eff_[0]);
-      EXPECT_LT(points_effort[0].at(1), joint_eff_[1]);
-      EXPECT_TRUE(std::isnan(current_command.effort[2]));
+      // Check equal to setpoint
+      EXPECT_NEAR(points_effort[0].at(0), state_reference.effort.at(0), COMMON_THRESHOLD);
+      EXPECT_NEAR(points_effort[0].at(1), state_reference.effort.at(1), COMMON_THRESHOLD);
+      EXPECT_NEAR(points_effort[0].at(2), state_reference.effort.at(2), COMMON_THRESHOLD);
     }
   }
 
