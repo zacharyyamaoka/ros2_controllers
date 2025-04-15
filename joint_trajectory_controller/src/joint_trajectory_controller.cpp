@@ -284,11 +284,12 @@ controller_interface::return_type JointTrajectoryController::update(
           // Update PIDs
           for (auto i = 0ul; i < num_cmd_joints_; ++i)
           {
-            // If effort interface only, add desired effort as feed forward
-            // If velocity interface, ignore desired effort
+            // If effort interface only, add commanded effort as feed forward,
+            // If velocity interface only, add commanded velocity * ff_velocity_scale as feed forward
+            // in any other combination, use_closed_loop_pid_adapter_=False and this won't be calculated/used
             size_t index_cmd_joint = map_cmd_to_joints_[i];
             tmp_command_[index_cmd_joint] =
-              (command_next_.velocities[index_cmd_joint] * ff_velocity_scale_[i]) +
+              (has_velocity_command_interface_ ? command_next_.velocities[index_cmd_joint] * ff_velocity_scale_[i] : 0.0) +
               (has_effort_command_interface_ ? command_next_.effort[index_cmd_joint] : 0.0) +
               pids_[i]->compute_command(
                 state_error_.positions[index_cmd_joint], state_error_.velocities[index_cmd_joint],
