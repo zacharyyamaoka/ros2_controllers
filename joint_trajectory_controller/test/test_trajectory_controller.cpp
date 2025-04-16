@@ -1530,7 +1530,7 @@ TEST_P(TrajectoryControllerTestParameterized, test_jumbled_joint_order)
 
   if (traj_controller_->has_effort_command_interface())
   {
-    if (traj_controller_->has_position_command_interface())
+    if (!traj_controller_->use_closed_loop_pid_adapter())
     {
       EXPECT_NEAR(points_effort.at(0), joint_eff_[0], COMMON_THRESHOLD);
       EXPECT_NEAR(points_effort.at(1), joint_eff_[1], COMMON_THRESHOLD);
@@ -1629,7 +1629,7 @@ TEST_P(TrajectoryControllerTestParameterized, test_partial_joint_list)
 
   if (traj_controller_->has_effort_command_interface())
   {
-    if (traj_controller_->has_position_command_interface())
+    if (!traj_controller_->use_closed_loop_pid_adapter())
     {
       EXPECT_NEAR(0.0, joint_eff_[0], COMMON_THRESHOLD);
       EXPECT_NEAR(0.0, joint_eff_[1], COMMON_THRESHOLD);
