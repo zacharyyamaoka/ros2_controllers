@@ -55,6 +55,9 @@ tl::expected<void, std::string> command_interface_type_combinations(
       "'position' command interfaces are present");
   }
 
+  return {};
+}
+
 tl::expected<void, std::string> state_interface_type_combinations(
   rclcpp::Parameter const & parameter)
 {
