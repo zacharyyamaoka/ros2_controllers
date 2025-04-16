@@ -1509,6 +1509,11 @@ bool JointTrajectoryController::validate_trajectory_msg(
     }
   }
 
+  size_t num_position_points = 0;
+  size_t num_velocity_points = 0;
+  size_t num_accleration_points = 0;
+  size_t num_effort_points = 0;
+
   rclcpp::Duration previous_traj_time(0ms);
   for (size_t i = 0; i < trajectory.points.size(); ++i)
   {
@@ -1572,7 +1577,30 @@ bool JointTrajectoryController::validate_trajectory_msg(
         "controllers using the 'effort' command interface.");
       return false;
     }
+
+      // Increment counts for debugging
+      if (!points[i].positions.empty()) ++num_position_points;
+      if (!points[i].velocities.empty()) ++num_velocity_points;
+      if (!points[i].accelerations.empty()) ++num_accleration_points;
+      if (!points[i].effort.empty()) ++num_effort_points;
   }
+
+  double total_duration = rclcpp::Duration(trajectory.points.back().time_from_start).seconds();
+  RCLCPP_INFO(
+    get_node()->get_logger(),
+    "\n=====================\nGoal Summary:\n\n"
+    "%zu position points\n"
+    "%zu velocity points\n"
+    "%zu acceleration points\n"
+    "%zu effort points\n\n"
+    "Total Duration: %.3fs\n"
+    "=====================",
+    num_position_points,
+    num_velocity_points,
+    num_accleration_points,
+    num_effort_points,
+    total_duration);
+
   return true;
 }
 
