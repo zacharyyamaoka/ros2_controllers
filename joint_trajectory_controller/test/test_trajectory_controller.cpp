@@ -600,7 +600,7 @@ TEST_P(TrajectoryControllerTestParameterized, compute_error_angle_wraparound_tru
   current.positions = {points[0].begin(), points[0].end()};
   current.velocities = {points_velocities[0].begin(), points_velocities[0].end()};
   current.accelerations = {points_accelerations[0].begin(), points_accelerations[0].end()};
-  traj_controller_->resize_joint_trajectory_point(error, n_joints);
+  traj_controller_->resize_joint_trajectory_point_state(error, n_joints);
 
   // zero error
   desired = current;
@@ -629,7 +629,7 @@ TEST_P(TrajectoryControllerTestParameterized, compute_error_angle_wraparound_tru
   desired.positions[0] += 3.0 * M_PI_2;
   desired.velocities[0] += 1.0;
   desired.accelerations[0] += 1.0;
-  traj_controller_->resize_joint_trajectory_point(error, n_joints);
+  traj_controller_->resize_joint_trajectory_point_state(error, n_joints);
   for (size_t i = 0; i < n_joints; ++i)
   {
     traj_controller_->testable_compute_error_for_joint(error, i, current, desired);
@@ -692,7 +692,7 @@ TEST_P(TrajectoryControllerTestParameterized, compute_error_angle_wraparound_fal
   current.positions = {points[0].begin(), points[0].end()};
   current.velocities = {points_velocities[0].begin(), points_velocities[0].end()};
   current.accelerations = {points_accelerations[0].begin(), points_accelerations[0].end()};
-  traj_controller_->resize_joint_trajectory_point(error, n_joints);
+  traj_controller_->resize_joint_trajectory_point_state(error, n_joints);
 
   // zero error
   desired = current;
@@ -721,7 +721,7 @@ TEST_P(TrajectoryControllerTestParameterized, compute_error_angle_wraparound_fal
   desired.positions[0] += 3.0 * M_PI_4;
   desired.velocities[0] += 1.0;
   desired.accelerations[0] += 1.0;
-  traj_controller_->resize_joint_trajectory_point(error, n_joints);
+  traj_controller_->resize_joint_trajectory_point_state(error, n_joints);
   for (size_t i = 0; i < n_joints; ++i)
   {
     traj_controller_->testable_compute_error_for_joint(error, i, current, desired);

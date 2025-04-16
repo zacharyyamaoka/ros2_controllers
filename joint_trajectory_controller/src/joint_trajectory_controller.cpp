@@ -941,12 +941,12 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
     std::bind(&JointTrajectoryController::goal_cancelled_callback, this, _1),
     std::bind(&JointTrajectoryController::goal_accepted_callback, this, _1));
 
-  resize_joint_trajectory_point(state_current_, dof_);
+  resize_joint_trajectory_point_state(state_current_, dof_);
   resize_joint_trajectory_point_command(
     command_current_, dof_, std::numeric_limits<double>::quiet_NaN());
-  resize_joint_trajectory_point(state_desired_, dof_);
-  resize_joint_trajectory_point(state_error_, dof_);
-  resize_joint_trajectory_point(
+  resize_joint_trajectory_point_state(state_desired_, dof_);
+  resize_joint_trajectory_point_state(state_error_, dof_);
+  resize_joint_trajectory_point_state(
     last_commanded_state_, dof_, std::numeric_limits<double>::quiet_NaN());
 
   query_state_srv_ = get_node()->create_service<control_msgs::srv::QueryTrajectoryState>(
@@ -1015,7 +1015,7 @@ controller_interface::CallbackReturn JointTrajectoryController::on_activate(
   // Handle restart of controller by reading from commands if those are not NaN (a controller was
   // running already)
   trajectory_msgs::msg::JointTrajectoryPoint state;
-  resize_joint_trajectory_point(state, dof_);
+  resize_joint_trajectory_point_state(state, dof_);
   // read from cmd joints only if all joints have command interface
   // otherwise it leaves the entries of joints without command interface NaN.
   // if no open_loop control, state_current_ is then used for `set_point_before_trajectory_msg` and
@@ -1656,7 +1656,7 @@ bool JointTrajectoryController::contains_interface_type(
          interface_type_list.end();
 }
 
-void JointTrajectoryController::resize_joint_trajectory_point(
+void JointTrajectoryController::resize_joint_trajectory_point_state(
   trajectory_msgs::msg::JointTrajectoryPoint & point, size_t size, double value)
 {
   point.positions.resize(size, value);

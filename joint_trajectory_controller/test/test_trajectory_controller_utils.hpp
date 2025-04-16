@@ -214,7 +214,7 @@ public:
   /**
    * a copy of the private member function
    */
-  void resize_joint_trajectory_point(
+  void resize_joint_trajectory_point_state(
     trajectory_msgs::msg::JointTrajectoryPoint & point, size_t size)
   {
     point.positions.resize(size, 0.0);
