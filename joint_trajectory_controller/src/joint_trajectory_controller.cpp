@@ -292,7 +292,7 @@ controller_interface::return_type JointTrajectoryController::update(
               (has_effort_command_interface_ ? command_next_.effort[index_cmd_joint] : 0.0) +
               pids_[i]->compute_command(
                 state_error_.positions[index_cmd_joint], state_error_.velocities[index_cmd_joint],
-                period);
+                period); // TODO not clear to me what this does on effort only as there is no position or vel command?
           }
         }
 
@@ -325,7 +325,7 @@ controller_interface::return_type JointTrajectoryController::update(
           else
           {
             // If position and effort command interfaces, only pass desired effort
-            assign_interface_from_point(joint_command_interface_[3], state_desired_.effort);
+            assign_interface_from_point(joint_command_interface_[3], command_next_.effort);
           }
         }
 
