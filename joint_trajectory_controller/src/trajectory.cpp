@@ -121,6 +121,8 @@ bool Trajectory::sample(
   }
 
   output_state = trajectory_msgs::msg::JointTrajectoryPoint();
+  output_state.time_from_start = sample_time - trajectory_start_time_;
+
   auto & first_point_in_msg = trajectory_msg_->points[0];
   const rclcpp::Time first_point_timestamp =
     trajectory_start_time_ + first_point_in_msg.time_from_start;
