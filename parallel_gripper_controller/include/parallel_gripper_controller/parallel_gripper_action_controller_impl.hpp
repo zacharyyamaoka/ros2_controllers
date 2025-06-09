@@ -27,6 +27,26 @@
 namespace parallel_gripper_action_controller
 {
 
+inline std::string get_full_prefix(const std::string & full_name)
+{
+  auto pos = full_name.rfind('/');
+  if (pos == std::string::npos || pos == 0)
+  {
+    return "";  // No slash or nothing before it
+  }
+  return full_name.substr(0, pos);
+}
+
+inline std::string get_suffix(const std::string & full_name)
+{
+  auto pos = full_name.rfind('/');
+  if (pos == std::string::npos || pos == full_name.length() - 1)
+  {
+    return full_name;  // No slash, or slash at end
+  }
+  return full_name.substr(pos + 1);
+}
+
 void GripperActionController::preempt_active_goal()
 {
   // Cancels the currently active goal
@@ -247,6 +267,21 @@ controller_interface::CallbackReturn GripperActionController::on_configure(
 controller_interface::CallbackReturn GripperActionController::on_activate(
   const rclcpp_lifecycle::State &)
 {
+
+// Log all available command interfaces
+  RCLCPP_INFO(get_node()->get_logger(), "Available command interfaces:");
+  for (const auto & interface : command_interfaces_)
+  {
+    RCLCPP_INFO(
+      get_node()->get_logger(),
+      "- prefix: '%s', interface: '%s', full name: '%s', full prefix: '%s', suffix: '%s'",
+      interface.get_prefix_name().c_str(),
+      interface.get_interface_name().c_str(),
+      interface.get_name().c_str(),
+      get_full_prefix(interface.get_name()).c_str(),
+      get_suffix(interface.get_name()).c_str());
+  }
+
   auto command_interface_it = std::find_if(
     command_interfaces_.begin(), command_interfaces_.end(),
     [](const hardware_interface::LoanedCommandInterface & command_interface)
