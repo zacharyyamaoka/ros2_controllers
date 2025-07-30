@@ -216,6 +216,14 @@ void GripperActionController::check_for_success(
   }
   else
   {
+    // const double elapsed_time = (time - last_movement_time_).seconds();
+    // RCLCPP_INFO(get_node()->get_logger(),
+    //   "Checking for stall:\n"
+    //   " - current time: %.3f\n"
+    //   " - last movement time: %.3f\n"
+    //   " - elapsed: %.3f\n"
+    //   " - stall timeout: %.3f",
+    //   time.seconds(), last_movement_time_.seconds(), elapsed_time, params_.stall_timeout);
     if (fabs(current_velocity) > params_.stall_velocity_threshold)
     {
       last_movement_time_ = time;
@@ -285,7 +293,10 @@ controller_interface::CallbackReturn GripperActionController::on_activate(
   auto command_interface_it = std::find_if(
     command_interfaces_.begin(), command_interfaces_.end(),
     [](const hardware_interface::LoanedCommandInterface & command_interface)
-    { return command_interface.get_interface_name() == hardware_interface::HW_IF_POSITION; });
+      { return get_suffix(command_interface.get_name()) == hardware_interface::HW_IF_POSITION; });
+    // { return command_interface.get_interface_name() == hardware_interface::HW_IF_POSITION; });
+
+
   if (command_interface_it == command_interfaces_.end())
   {
     RCLCPP_ERROR(
@@ -293,45 +304,54 @@ controller_interface::CallbackReturn GripperActionController::on_activate(
       hardware_interface::HW_IF_POSITION);
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (command_interface_it->get_prefix_name() != params_.joint)
+  if (get_full_prefix(command_interface_it->get_name()) != params_.joint)
+  // if (command_interface_it->get_prefix_name() != params_.joint)
   {
     RCLCPP_ERROR(
       get_node()->get_logger(), "Command interface is different than joint name `%s` != `%s`",
-      command_interface_it->get_prefix_name().c_str(), params_.joint.c_str());
+      get_full_prefix(command_interface_it->get_name()).c_str(), params_.joint.c_str());
     return controller_interface::CallbackReturn::ERROR;
   }
   const auto position_state_interface_it = std::find_if(
     state_interfaces_.begin(), state_interfaces_.end(),
     [](const hardware_interface::LoanedStateInterface & state_interface)
-    { return state_interface.get_interface_name() == hardware_interface::HW_IF_POSITION; });
+      { return get_suffix(state_interface.get_name()) == hardware_interface::HW_IF_POSITION; });
+    // { return state_interface.get_interface_name() == hardware_interface::HW_IF_POSITION; });
+
+
   if (position_state_interface_it == state_interfaces_.end())
   {
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 position state interface");
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (position_state_interface_it->get_prefix_name() != params_.joint)
+  if (get_full_prefix(position_state_interface_it->get_name()) != params_.joint)
+  // if (position_state_interface_it->get_prefix_name() != params_.joint)
   {
     RCLCPP_ERROR(
       get_node()->get_logger(),
       "Position state interface is different than joint name `%s` != `%s`",
-      position_state_interface_it->get_prefix_name().c_str(), params_.joint.c_str());
+      get_full_prefix(position_state_interface_it->get_name()).c_str(), params_.joint.c_str());
     return controller_interface::CallbackReturn::ERROR;
   }
+
   const auto velocity_state_interface_it = std::find_if(
     state_interfaces_.begin(), state_interfaces_.end(),
     [](const hardware_interface::LoanedStateInterface & state_interface)
-    { return state_interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY; });
+      { return get_suffix(state_interface.get_name()) == hardware_interface::HW_IF_VELOCITY; });
+      // { return state_interface.get_interface_name() == hardware_interface::HW_IF_VELOCITY; });
+
   if (velocity_state_interface_it == state_interfaces_.end())
   {
     RCLCPP_ERROR(get_node()->get_logger(), "Expected 1 velocity state interface");
     return controller_interface::CallbackReturn::ERROR;
   }
-  if (velocity_state_interface_it->get_prefix_name() != params_.joint)
+  if (get_full_prefix(velocity_state_interface_it->get_name()) != params_.joint)
+  // if (velocity_state_interface_it->get_prefix_name() != params_.joint)
   {
     RCLCPP_ERROR(
       get_node()->get_logger(),
       "Velocity command interface is different than joint name `%s` != `%s`",
-      velocity_state_interface_it->get_prefix_name().c_str(), params_.joint.c_str());
+      get_full_prefix(velocity_state_interface_it->get_name()).c_str(), params_.joint.c_str());
     return controller_interface::CallbackReturn::ERROR;
   }
 
