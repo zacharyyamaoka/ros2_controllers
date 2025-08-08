@@ -141,6 +141,11 @@ controller_interface::return_type JointTrajectoryController::update(
   {
     params_ = param_listener_->get_params();
     default_tolerances_ = get_segment_tolerances(logger, params_);
+    // update the interpolation method
+    interpolation_method_ = interpolation_methods::from_string(params_.interpolation_method);
+    RCLCPP_INFO(
+      logger, "Updated interpolation method to '%s'.",
+      interpolation_methods::InterpolationMethodMap.at(interpolation_method_).c_str());
     // update the PID gains
     // variable use_closed_loop_pid_adapter_ is updated in on_configure only
     if (use_closed_loop_pid_adapter_)
@@ -866,9 +871,10 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
   // parse remaining parameters
   default_tolerances_ = get_segment_tolerances(logger, params_);
   active_tolerances_.initRT(default_tolerances_);
-  const std::string interpolation_string =
-    get_node()->get_parameter("interpolation_method").as_string();
-  interpolation_method_ = interpolation_methods::from_string(interpolation_string);
+  //   const std::string interpolation_string =
+  //   get_node()->get_parameter("interpolation_method").as_string();
+  // interpolation_method_ = interpolation_methods::from_string(interpolation_string);
+  interpolation_method_ = interpolation_methods::from_string(params_.interpolation_method);
   RCLCPP_INFO(
     logger, "Using '%s' interpolation method.",
     interpolation_methods::InterpolationMethodMap.at(interpolation_method_).c_str());
@@ -1036,6 +1042,7 @@ controller_interface::CallbackReturn JointTrajectoryController::on_activate(
   last_commanded_time_ = rclcpp::Time();
 
   // The controller should start by holding position at the beginning of active state
+  RCLCPP_INFO(logger, "Setting trajectory point to hold position at activation.");
   add_new_trajectory_msg(set_hold_position());
   rt_is_holding_.writeFromNonRT(true);
 
@@ -1626,8 +1633,18 @@ void JointTrajectoryController::preempt_active_goal()
 std::shared_ptr<trajectory_msgs::msg::JointTrajectory>
 JointTrajectoryController::set_hold_position()
 {
+  // Command to stay at hardcoded position for chained mode
+  hold_position_msg_ptr_->points[0].positions = {0.0, -1.57, 0.0, -1.57, 0.0, 0.0};
   // Command to stay at current position
-  hold_position_msg_ptr_->points[0].positions = state_current_.positions;
+  // hold_position_msg_ptr_->points[0].positions = state_current_.positions;
+  RCLCPP_INFO(
+    get_node()->get_logger(),
+    "Holding position at: [%s]",
+    fmt::format(
+      "{}", 
+      fmt::join(hold_position_msg_ptr_->points[0].positions, ", ")
+    ).c_str()
+  );
 
   // set flag, otherwise tolerances will be checked with holding position too
   rt_is_holding_.writeFromNonRT(true);

@@ -95,7 +95,6 @@ joint_trajectory_controller:
     type: string,
     default_value: "splines",
     description: "The type of interpolation to use, if any",
-    read_only: true,
     validation: {
       one_of<>: [["splines", "none"]],
     }
