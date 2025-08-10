@@ -19,8 +19,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "control_msgs/action/follow_joint_trajectory.hpp"
+#include <cmath>
+ 
+#include "rclcpp/logging.hpp"
+ #include "control_msgs/action/follow_joint_trajectory.hpp"
 #include "control_msgs/msg/joint_trajectory_controller_state.hpp"
 #include "control_msgs/srv/query_trajectory_state.hpp"
 #include "control_toolbox/pid.hpp"
@@ -149,6 +151,12 @@ protected:
   // reserved storage for result of the command when closed loop pid adapter is used
   std::vector<double> tmp_command_;
 
+  // Historical data storage for action results
+  std::vector<trajectory_msgs::msg::JointTrajectoryPoint> historical_desired_states_;
+  std::vector<trajectory_msgs::msg::JointTrajectoryPoint> historical_current_states_;
+  std::vector<trajectory_msgs::msg::JointTrajectoryPoint> historical_state_errors_;
+  std::vector<rclcpp::Time> historical_timestamps_;
+
   // Timeout to consider commands old
   double cmd_timeout_;
   // True if holding position or repeating last trajectory point in case of success
@@ -261,6 +269,16 @@ protected:
     const std::shared_ptr<control_msgs::srv::QueryTrajectoryState::Request> request,
     std::shared_ptr<control_msgs::srv::QueryTrajectoryState::Response> response);
 
+  // Store historical data for action results
+  void store_historical_data(
+    const trajectory_msgs::msg::JointTrajectoryPoint & desired_state,
+    const trajectory_msgs::msg::JointTrajectoryPoint & current_state,
+    const trajectory_msgs::msg::JointTrajectoryPoint & state_error,
+    const rclcpp::Time & timestamp);
+
+  // Clear historical data when starting a new trajectory
+  void clear_historical_data();
+
 private:
   void update_pids();
 
@@ -285,9 +303,51 @@ private:
   void assign_interface_from_point(
     const T & joint_interface, const std::vector<double> & trajectory_point_interface)
   {
+    // Validate sizes before writing to hardware interfaces
+    const auto logger = this->get_node()->get_logger();
+
+    const size_t num_handles = joint_interface.size();
+    if (num_handles != num_cmd_joints_)
+    {
+      RCLCPP_ERROR_THROTTLE(
+        logger, *this->get_node()->get_clock(), 2000,
+        "Joint interface handle count (%zu) does not match number of command joints (%zu). Skipping write.",
+        num_handles, num_cmd_joints_);
+      return;
+    }
+
+    if (trajectory_point_interface.size() < dof_)
+    {
+      RCLCPP_ERROR_THROTTLE(
+        logger, *this->get_node()->get_clock(), 2000,
+        "Trajectory point vector size (%zu) is smaller than DOF (%zu). Skipping write.",
+        trajectory_point_interface.size(), dof_);
+      return;
+    }
+
     for (size_t index = 0; index < num_cmd_joints_; ++index)
     {
-      joint_interface[index].get().set_value(trajectory_point_interface[map_cmd_to_joints_[index]]);
+      const size_t joint_global_index = map_cmd_to_joints_[index];
+      if (joint_global_index >= trajectory_point_interface.size())
+      {
+        RCLCPP_ERROR_THROTTLE(
+          logger, *this->get_node()->get_clock(), 2000,
+          "Mapped joint index (%zu) out of bounds for trajectory vector size (%zu). Skipping this joint.",
+          joint_global_index, trajectory_point_interface.size());
+        continue;
+      }
+
+      const double value = trajectory_point_interface[joint_global_index];
+      if (std::isnan(value) || !std::isfinite(value))
+      {
+        RCLCPP_WARN_THROTTLE(
+          logger, *this->get_node()->get_clock(), 2000,
+          "Command value for joint %zu is invalid (NaN/Inf). Skipping this joint.", index);
+        continue;
+      }
+
+      // Safe to write
+      joint_interface[index].get().set_value(value);
     }
   }
 };
